@@ -102,16 +102,56 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   bool _showChart = false;
+  List<Widget> _buildLandscape(MediaQueryData mediaQuerry,
+      PreferredSizeWidget app_Bar, Widget txListWidget) {
+    return [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            'Show Chart',
+            style: TextStyle(fontSize: 15),
+          ),
+          Switch.adaptive(
+              activeColor: Theme.of(context)
+                  .colorScheme
+                  .secondary, //IOS Specific to make the color of button same as AppTheme
+              value: _showChart,
+              onChanged: (val) {
+                setState(() {
+                  _showChart = val;
+                });
+              })
+        ],
+      ),
+      _showChart //By default DART assumes bool = True
+          ? Container(
+              height: (mediaQuerry.size.height -
+                      app_Bar.preferredSize.height -
+                      mediaQuerry.padding.top) *
+                  0.7,
+              child: Chart(_recentTransaction))
+          : txListWidget
+    ];
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    final mediaQuerry = MediaQuery.of(context);
-    final optimizedText = mediaQuerry.textScaleFactor;
-    final isLandscape = mediaQuerry.orientation == Orientation.landscape;
-    //We put the AppBar into a final variable coz it never changes hence then we can use it as a const variable input
-    final PreferredSizeWidget app_Bar = Platform.isIOS
-        ? CupertinoNavigationBar(
-            /*Same as title in Appbar*/ middle: Text('Orango!'),
+  List<Widget> _buildPortrait(MediaQueryData mediaQuerry,
+      PreferredSizeWidget app_Bar, Widget txListWidget) {
+    return [
+      Container(
+          height: (mediaQuerry.size.height -
+                  app_Bar.preferredSize.height -
+                  mediaQuerry.padding.top) *
+              0.3,
+          child: Chart(_recentTransaction)),
+      txListWidget
+    ];
+  }
+
+  PreferredSizeWidget _buildAppBar(double optimizedText) {
+    return Platform.isIOS
+        ? /*Same as title in Appbar*/ CupertinoNavigationBar(
+            middle: Text('Orango!'),
             trailing: Row(
               mainAxisSize: MainAxisSize
                   .min, //By Default it takes all length it can get which wont allow our title to render thats why set it to minimumu
@@ -121,21 +161,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Icon(CupertinoIcons.add),
                 ),
               ],
-            ),
-          )
+            ))
         : AppBar(
             centerTitle: true,
             backgroundColor: Colors.transparent,
             elevation: 10,
             flexibleSpace: Container(
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.elliptical(25, 10),
-                      bottomRight: Radius.elliptical(25, 10)),
-                  gradient: LinearGradient(
-                      colors: [Colors.orange, Color.fromARGB(255, 210, 114, 4)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter)),
+              decoration: BoxDecoration(color: Theme.of(context).primaryColor),
             ),
             actions: <Widget>[
               IconButton(
@@ -149,6 +181,15 @@ class _MyHomePageState extends State<MyHomePage> {
               style: TextStyle(fontSize: 30 * optimizedText),
             ),
           ) as PreferredSizeWidget;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuerry = MediaQuery.of(context);
+    final optimizedText = mediaQuerry.textScaleFactor;
+    final isLandscape = mediaQuerry.orientation == Orientation.landscape;
+    //We put the AppBar into a final variable coz it never changes hence then we can use it as a const variable input
+    final PreferredSizeWidget app_Bar = _buildAppBar(optimizedText);
 
     final txListWidget = Container(
         height: (mediaQuerry.size.height -
@@ -164,42 +205,9 @@ class _MyHomePageState extends State<MyHomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             if (isLandscape)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Show Chart',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  Switch.adaptive(
-                      activeColor: Theme.of(context)
-                          .colorScheme
-                          .secondary, //IOS Specific to make the color of button same as AppTheme
-                      value: _showChart,
-                      onChanged: (val) {
-                        setState(() {
-                          _showChart = val;
-                        });
-                      })
-                ],
-              ),
+              ..._buildLandscape(mediaQuerry, app_Bar, txListWidget),
             if (!isLandscape)
-              Container(
-                  height: (mediaQuerry.size.height -
-                          app_Bar.preferredSize.height -
-                          mediaQuerry.padding.top) *
-                      0.3,
-                  child: Chart(_recentTransaction)),
-            if (!isLandscape) txListWidget,
-            if (isLandscape)
-              _showChart //By default DART assumes bool = True
-                  ? Container(
-                      height: (mediaQuerry.size.height -
-                              app_Bar.preferredSize.height -
-                              mediaQuerry.padding.top) *
-                          0.7,
-                      child: Chart(_recentTransaction))
-                  : txListWidget
+              ..._buildPortrait(mediaQuerry, app_Bar, txListWidget)
           ],
         ),
       ),

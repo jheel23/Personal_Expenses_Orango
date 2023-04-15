@@ -54,6 +54,8 @@ class _NewTransactionState extends State<NewTransaction> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
         child: Container(
           margin: EdgeInsets.all(1),
+          padding: EdgeInsets.fromLTRB(
+              10, 0, 0, MediaQuery.of(context).viewInsets.bottom + 4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -95,7 +97,7 @@ class _NewTransactionState extends State<NewTransaction> {
                   ),
                   TextButton(
                       onPressed: _datePicker,
-                      child: Text(
+                      child: const Text(
                         'Choose Date',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       )),
@@ -103,7 +105,7 @@ class _NewTransactionState extends State<NewTransaction> {
               ),
               ElevatedButton(
                   onPressed: _submitData,
-                  child: Text(
+                  child: const Text(
                     'Add Transaction',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
