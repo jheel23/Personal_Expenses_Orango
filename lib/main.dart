@@ -3,6 +3,9 @@ import 'dart:io'; //To know which platform app is running On
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_expenses/pages/todo_page.dart';
 
 import './widgets/chart.dart';
 import './widgets/new_transaction.dart';
@@ -11,12 +14,11 @@ import './widgets/transaction_list.dart';
 
 //Context: Thing that allows my widget to figure out where my widget is!
 void main() {
-  // WidgetsFlutterBinding.ensureInitialized();
-  // SystemChrome.setPreferredOrientations(
-  //     [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]).then((_) {
-  //   runApp(MyApp());
-
-  runApp(MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]).then((_) {
+    runApp(ProviderScope(child: MyApp()));
+  });
 }
 /*If in the above code we didnt use "then" ,it'll create a problem suppose if the user opens the app in 
   landscape mode itself then it won't recognize it and will run the app on landscape even though the app not supprted on LANDSCAPE
@@ -34,15 +36,16 @@ class MyApp extends StatelessWidget {
           splashIconSize: double.infinity,
           nextScreen: MyHomePage()),
       theme: ThemeData(
+          useMaterial3: true,
           textTheme: ThemeData.light().textTheme.copyWith(
               titleSmall: TextStyle(fontSize: 18),
               labelLarge: TextStyle(color: Colors.white)),
           appBarTheme: AppBarTheme(
               titleTextStyle: TextStyle(
-                  fontFamily: 'OpenSans',
+                  fontFamily: 'Quicksand',
                   fontSize: 22,
                   fontWeight: FontWeight.w400)),
-          fontFamily: 'Quicksand',
+          fontFamily: 'OpenSans',
           primarySwatch: Colors.orange,
           primaryColor: Colors
               .orange /*It automatically choses the theme of the app based on the color you choose */),
@@ -58,7 +61,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   // late String titleinput;
   final List<Transaction> _userTransaction = [];
-
+  var tabIndex = 0;
   void _addnewtransaction(
       String txtitle, double txamount, DateTime chosenDate) {
     final newTx = Transaction(
@@ -77,7 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _addTransactionScreen(BuildContext ctx) {
+  void _addTransactionScreen(BuildContext ctx, int index) {
     showModalBottomSheet(
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
@@ -87,7 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return Padding(
           padding:
               EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: NewTransaction(_addnewtransaction),
+          child: NewTransaction(_addnewtransaction, index),
         );
       },
     );
@@ -157,7 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   .min, //By Default it takes all length it can get which wont allow our title to render thats why set it to minimumu
               children: [
                 GestureDetector(
-                  onTap: () => _addTransactionScreen(context),
+                  onTap: () => _addTransactionScreen(context, 0),
                   child: Icon(CupertinoIcons.add),
                 ),
               ],
@@ -169,13 +172,10 @@ class _MyHomePageState extends State<MyHomePage> {
             flexibleSpace: Container(
               decoration: BoxDecoration(color: Theme.of(context).primaryColor),
             ),
-            actions: <Widget>[
-              IconButton(
-                onPressed: () => _addTransactionScreen(context),
-                icon: Icon(Icons.add_circle),
-                iconSize: 30,
-              )
-            ],
+            bottom: TabBar(tabs: [
+              Tab(icon: Icon(Icons.list), text: 'Transactions'),
+              Tab(icon: Icon(Icons.today_outlined), text: 'ToDo'),
+            ]),
             title: Text(
               'Orango!',
               style: TextStyle(fontSize: 30 * optimizedText),
@@ -185,6 +185,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    //
+    //
+
     final mediaQuerry = MediaQuery.of(context);
     final optimizedText = mediaQuerry.textScaleFactor;
     final isLandscape = mediaQuerry.orientation == Orientation.landscape;
@@ -212,21 +215,52 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+    //
+    //
     return Platform.isIOS
-        ? CupertinoPageScaffold(
-            child: pageBody,
-            navigationBar: app_Bar as ObstructingPreferredSizeWidget,
+        ? WillPopScope(
+            onWillPop: () async => false,
+            child: CupertinoPageScaffold(
+              child: pageBody,
+              navigationBar: app_Bar as ObstructingPreferredSizeWidget,
+            ),
           )
-        : Scaffold(
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerFloat,
-            floatingActionButton: Platform.isIOS //IOS OPTIMIZATIONS
-                ? Container()
-                : FloatingActionButton(
-                    onPressed: () => _addTransactionScreen(context),
-                    child: Icon(Icons.add, size: 36),
-                    backgroundColor: Theme.of(context).primaryColor),
-            appBar: app_Bar,
-            body: pageBody);
+        :
+        // : WillPopScope(
+        //     onWillPop: () async {
+        //       return (await showDialog(
+        //             context: context,
+        //             builder: (ctx) => AlertDialog(
+        //               title: Text('Do you want to exit the App?'),
+        //               actions: [
+        //                 TextButton(
+        //                     onPressed: () => Navigator.of(ctx).pop(
+        //                         false), //this will pop the alert dialog and return a value of "false"
+        //                     child: Text('No')),
+        //                 TextButton(
+        //                     onPressed: () => Navigator.of(ctx).pop(
+        //                         true), //this will pop the alert dialog and return a value of "true"
+        //                     child: Text('Yes'))
+        //               ],
+        //             ),
+        //           )) ??
+        //           false;
+        //     },
+        DefaultTabController(
+            initialIndex: 0,
+            length: 2,
+            child: new Scaffold(
+                floatingActionButtonLocation:
+                    FloatingActionButtonLocation.centerFloat,
+                floatingActionButton: Platform.isIOS //IOS OPTIMIZATIONS
+                    ? Container()
+                    : FloatingActionButton(
+                        onPressed: () =>
+                            _addTransactionScreen(context, tabIndex),
+                        child: Icon(Icons.add, size: 36),
+                        backgroundColor: Theme.of(context).primaryColor),
+                appBar: app_Bar,
+                body: TabBarView(children: [pageBody, ToDoPage()])),
+          );
   }
 }

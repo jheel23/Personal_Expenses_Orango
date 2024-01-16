@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 
 class NewTransaction extends StatefulWidget {
   final Function addtx;
-  NewTransaction(this.addtx);
+  final int tabindex;
+  NewTransaction(this.addtx, this.tabindex);
 
   @override
   State<NewTransaction> createState() => _NewTransactionState();
@@ -12,18 +13,28 @@ class NewTransaction extends StatefulWidget {
 class _NewTransactionState extends State<NewTransaction> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
+  bool isToDo() {
+    if (widget.tabindex == 1) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   DateTime? _selectedDate;
 
   void _submitData() {
     if (_amountController.text.isEmpty) {
       return;
     }
-    final enteredtitle = _titleController.text;
+    final enteredTitleTask = _titleController.text;
     final enteredamount = double.parse(_amountController.text);
-    if (enteredtitle.isEmpty || enteredamount <= 0 || _selectedDate == null) {
+    if (enteredTitleTask.isEmpty ||
+        enteredamount <= 0 ||
+        _selectedDate == null) {
       return; //it'll terminate the code here if condition is true or one of the field is not filled
     }
-    widget.addtx(enteredtitle, enteredamount, _selectedDate);
+    widget.addtx(enteredTitleTask, enteredamount, _selectedDate);
     Navigator.of(context).pop();
   }
 
@@ -68,50 +79,54 @@ class _NewTransactionState extends State<NewTransaction> {
                 onSubmitted: (_) => _submitData(),
                 spellCheckConfiguration: SpellCheckConfiguration(),
                 decoration: InputDecoration(
-                    labelText: 'Title',
+                    labelText: isToDo() ? 'Task' : 'Title',
                     labelStyle: TextStyle(
                       color: Theme.of(context).primaryColorDark,
                     )),
               ),
-              TextField(
-                //onChanged: (value) => amountinput = value,
-                controller: _amountController,
-                cursorColor: Theme.of(context).primaryColorDark,
-                cursorHeight: 30,
-                onSubmitted: (_) => _submitData(),
-                keyboardType: TextInputType
-                    .number, //for IOS: TextInputTypeWithOptions(decimal:true)
-                decoration: InputDecoration(
-                    labelText: 'Amount',
-                    labelStyle: TextStyle(
-                      color: Theme.of(context).primaryColorDark,
-                    )),
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Text(_selectedDate == null
-                        ? 'No Chosen Date'
-                        : 'Picked Date: ${DateFormat.yMd().format(_selectedDate!)}'),
-                  ),
-                  TextButton(
-                      onPressed: _datePicker,
-                      child: const Text(
-                        'Choose Date',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+              if (!isToDo())
+                TextField(
+                  //onChanged: (value) => amountinput = value,
+                  controller: _amountController,
+                  cursorColor: Theme.of(context).primaryColorDark,
+                  cursorHeight: 30,
+                  onSubmitted: (_) => _submitData(),
+                  keyboardType: TextInputType
+                      .number, //for IOS: TextInputTypeWithOptions(decimal:true)
+                  decoration: InputDecoration(
+                      labelText: 'Amount',
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).primaryColorDark,
                       )),
-                ],
-              ),
+                ),
+              if (!isToDo())
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(_selectedDate == null
+                          ? 'No Chosen Date'
+                          : 'Picked Date: ${DateFormat.yMd().format(_selectedDate!)}'),
+                    ),
+                    TextButton(
+                        onPressed: _datePicker,
+                        child: const Text(
+                          'Choose Date',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange),
+                        )),
+                  ],
+                ),
               ElevatedButton(
                   onPressed: _submitData,
-                  child: const Text(
-                    'Add Transaction',
+                  child: Text(
+                    isToDo() ? 'Add Task' : 'Add Transaction',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   style: ButtonStyle(
                       foregroundColor:
-                          MaterialStateProperty.all(Colors.white))),
+                          MaterialStateProperty.all(Colors.orange))),
             ],
           ),
         ),

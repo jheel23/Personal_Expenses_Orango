@@ -1,0 +1,4 @@
+#Tue Jan 16 23:56:31 IST 2024
+base.0=C\:\\Users\\Jheel Johari\\Development\\projects\\personal_expenses\\build\\app\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
+path.0=classes.dex
+renamed.0=classes.dex
